@@ -76,7 +76,7 @@ def student_move(state):
    (and change where it is called).
    The function should return a move from 0-6
    """
-   move = alpha_beta_decision(board=state, depth=4)     
+   move = alpha_beta_decision(board=state, depth=3)     
    return move
 
 def play_game(vs_server = False):
@@ -190,7 +190,7 @@ def main():
       parser.print_help(sys.stderr)
       sys.exit(1)
       
-   for _ in range(20):
+   for _ in range(25):
 
       if args.local:
          play_game(vs_server = False)

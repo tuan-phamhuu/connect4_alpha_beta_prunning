@@ -1,8 +1,6 @@
 # This file provides an implementation of the alpha-beta pruning algorithm for the student player
 # Inspired by https://github.com/KeithGalli/Connect4-Python/blob/503c0b4807001e7ea43a039cb234a4e55c4b226c/connect4_with_ai.py#L168
 
-from re import S
-from shutil import move
 import numpy as np
 import math
 
@@ -38,9 +36,9 @@ def _utility_window(window):
         return -10
     # Allow opponent to win
     elif (window[:3] == OPPONENT).all() and (window[3] == EMPTY).all():
-        return -20
+        return -75
     elif (window[1:] == OPPONENT).all() and (window[0] == EMPTY).all():
-        return -20
+        return -75
     
     return 0
     
@@ -70,15 +68,15 @@ def _utility_board(board):
      
     # Diagonal lines
     for start_row in range(NUM_ROWS - 3):
-            for start_col in range(NUM_COLS - 3):
-                end_row = start_row + 4
-                end_col = start_col + 4
-                # positively slopped
-                window = board[range(start_row, end_row), range(start_col, end_col)]
-                score += _utility_window(window)
-                # negatively slopped
-                window = board[range(end_row - 1, start_row - 1, -1), range(start_col, end_col)]
-                score += _utility_window(window)    
+        for start_col in range(NUM_COLS - 3):
+            end_row = start_row + 4
+            end_col = start_col + 4
+            # positively slopped
+            window = board[range(start_row, end_row), range(start_col, end_col)]
+            score += _utility_window(window)
+            # negatively slopped
+            window = board[range(end_row - 1, start_row - 1, -1), range(start_col, end_col)]
+            score += _utility_window(window)    
                 
     return score
 
@@ -86,7 +84,6 @@ def _is_terminal_node(board):
     """
     Returns if the board is in a terminal state, i.e. if the game has ended
     """
-
     for player in [OPPONENT, STUDENT]:
         # Check for horizontal wins
         for row in range(NUM_ROWS):
@@ -156,7 +153,7 @@ def _min_for_opponent(board, depth, alpha, beta):
     return reward
 
 def alpha_beta_decision(board, depth=5):
-    available_moves = np.where(board[0, :] == 0)[0].tolist()
+    available_moves = np.where(board[0, :] == 0)[0]
     
     best_move_x = -1
     best_reward = -math.inf

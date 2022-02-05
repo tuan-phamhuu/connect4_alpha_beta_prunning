@@ -5,6 +5,7 @@ import numpy as np
 import argparse
 import sys
 from gym_connect_four import ConnectFourEnv
+from alpha_beta import alpha_beta_decision
 
 env: ConnectFourEnv = gym.make("ConnectFour-v0")
 
@@ -66,14 +67,17 @@ def opponents_move(env):
    env.change_player() # change back to student before returning
    return state, reward, done
 
-def student_move():
+def student_move(state):
    """
+   state: The current state of the board
+   
    TODO: Implement your min-max alpha-beta pruning algorithm here.
    Give it whatever input arguments you think are necessary
    (and change where it is called).
    The function should return a move from 0-6
    """
-   return random.choice([0, 1, 2, 3, 4, 5, 6])
+   move = alpha_beta_decision(board=state, depth=5)     
+   return move
 
 def play_game(vs_server = False):
    """
@@ -119,7 +123,7 @@ def play_game(vs_server = False):
    done = False
    while not done:
       # Select your move
-      stmove = student_move() # TODO: change input here
+      stmove = student_move(state) # TODO: change input here
 
       # make both student and bot/server moves
       if vs_server:

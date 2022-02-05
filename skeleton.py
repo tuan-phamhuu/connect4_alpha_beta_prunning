@@ -9,8 +9,8 @@ from alpha_beta import alpha_beta_decision
 
 env: ConnectFourEnv = gym.make("ConnectFour-v0")
 
-SERVER_ADRESS = "http://localhost:8000/"
-#SERVER_ADRESS = "https://vilde.cs.lth.se/edap01-4inarow/"
+#SERVER_ADRESS = "http://localhost:8000/"
+SERVER_ADRESS = "https://vilde.cs.lth.se/edap01-4inarow/"
 API_KEY = 'nyckel'
 STIL_ID = ["nh7321ph-s"] # TODO: fill this list with your stil-id's
 
@@ -76,7 +76,7 @@ def student_move(state):
    (and change where it is called).
    The function should return a move from 0-6
    """
-   move = alpha_beta_decision(board=state, depth=5)     
+   move = alpha_beta_decision(board=state, depth=4)     
    return move
 
 def play_game(vs_server = False):
@@ -189,19 +189,21 @@ def main():
    if len(sys.argv)==1:
       parser.print_help(sys.stderr)
       sys.exit(1)
+      
+   for _ in range(20):
 
-   if args.local:
-      play_game(vs_server = False)
-   elif args.online:
-      play_game(vs_server = True)
+      if args.local:
+         play_game(vs_server = False)
+      elif args.online:
+         play_game(vs_server = True)
 
-   if args.stats:
-      stats = check_stats()
-      print(stats)
+      if args.stats:
+         stats = check_stats()
+         print(stats)
 
-   # TODO: Run program with "--online" when you are ready to play against the server
-   # the results of your games there will be logged
-   # you can check your stats bu running the program with "--stats"
+      # TODO: Run program with "--online" when you are ready to play against the server
+      # the results of your games there will be logged
+      # you can check your stats bu running the program with "--stats"
 
 if __name__ == "__main__":
     main()

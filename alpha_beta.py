@@ -1,6 +1,7 @@
 # This file provides an implementation of the alpha-beta pruning algorithm for the student player
 # Inspired by https://github.com/KeithGalli/Connect4-Python/blob/503c0b4807001e7ea43a039cb234a4e55c4b226c/connect4_with_ai.py#L168
 
+from re import S
 from shutil import move
 import numpy as np
 import math
@@ -10,20 +11,76 @@ NUM_COLS = 7
 
 OPPONENT = -1
 STUDENT = 1
+EMPTY = 0
 
 def _utility_window(window):
     """
     Given a window of four cells, computes a utility score for the student
-    """
-    score = 0
+    """  
+    # Acquire win
+    if (window == STUDENT).all():
+        return 100
+    # Three connected cells
+    elif (window[:3] == STUDENT).all() and window[3] == EMPTY:
+        return 20
+    elif (window[1:] == STUDENT).all() and window[0] == EMPTY:
+        return 20
+    # Two connected cells
+    elif (window[:2] == STUDENT).all() and (window[2:] == EMPTY).all():
+        return 10
+    elif (window[2:] == STUDENT).all() and (window[:2] == EMPTY).all():
+        return 10
     
-
+    # Allow opponent to connect three cells that can be extended to four
+    if (window[:2] == OPPONENT).all() and (window[2:] == EMPTY).all():
+        return -10
+    elif (window[2:] == OPPONENT).all() and (window[:2] == EMPTY).all():
+        return -10
+    # Allow opponent to win
+    elif (window[:3] == OPPONENT).all() and (window[3] == EMPTY).all():
+        return -20
+    elif (window[1:] == OPPONENT).all() and (window[0] == EMPTY).all():
+        return -20
+    
+    return 0
+    
 def _utility_board(board):
     """
     Given the current board, computes an utility score for the student by evaluating 
     all possible windows of four horizontally/vertically/diagonally connected cells
     """
-    return 0
+    score = 0
+    
+    # Incentivize placements in the center to block diagonal lines of opponents
+    middle_column = board[:, NUM_COLS // 2]
+    middle_entries = (middle_column == STUDENT).sum()
+    score += middle_entries * 3
+    
+    # Horizontal lines
+    for row in range(NUM_ROWS):
+        for col in range(NUM_COLS - 3):
+            window = board[row, col : col + 4]
+            score += _utility_window(window)
+            
+    # Vertical lines
+    for row in range(NUM_ROWS - 3):
+        for col in range(NUM_COLS):
+            window = board[row : row + 4, col]
+            score += _utility_window(window)
+     
+    # Diagonal lines
+    for start_row in range(NUM_ROWS - 3):
+            for start_col in range(NUM_COLS - 3):
+                end_row = start_row + 4
+                end_col = start_col + 4
+                # positively slopped
+                window = board[range(start_row, end_row), range(start_col, end_col)]
+                score += _utility_window(window)
+                # negatively slopped
+                window = board[range(end_row - 1, start_row - 1, -1), range(start_col, end_col)]
+                score += _utility_window(window)    
+                
+    return score
 
 def _is_terminal_node(board):
     """

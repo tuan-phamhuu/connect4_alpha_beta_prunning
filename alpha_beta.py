@@ -29,7 +29,7 @@ def _utility_window(window):
     elif (window[2:] == STUDENT).all() and (window[:2] == EMPTY).all():
         return 10
     
-    # Allow opponent to connect three cells that can be extended to four
+    # Allow opponent to connect three cells that can be used for a win
     if (window[:2] == OPPONENT).all() and (window[2:] == EMPTY).all():
         return -10
     elif (window[2:] == OPPONENT).all() and (window[:2] == EMPTY).all():
@@ -88,13 +88,15 @@ def _is_terminal_node(board):
         # Check for horizontal wins
         for row in range(NUM_ROWS):
             for start_col in range(NUM_COLS - 3):
-                if (board[row, start_col : start_col + 4] == player).all():
+                end_col = start_col + 4
+                if (board[row, start_col : end_col] == player).all():
                     return True
 
         # Check for vertical wins
         for start_row in range(NUM_ROWS - 3):
             for col in range(NUM_COLS):
-                if (board[start_row : start_row + 4, col] == player).all():
+                end_row = start_row + 4
+                if (board[start_row : end_row, col] == player).all():
                     return True
 
         # Check for diagonal wins
@@ -116,17 +118,21 @@ def _is_terminal_node(board):
                 
     return False
 
+def _get_updated_board(board, move_x, player):
+    move_y = np.where(board[:, move_x] == 0)[0].max()
+    new_board = board.copy()
+    new_board[move_y, move_x] = player
+    return new_board
+
 def _max_for_student(board, depth, alpha, beta):
     if _is_terminal_node(board) or depth == 0:
         return _utility_board(board)
     
     reward = alpha
-    available_moves = np.where(board[0, :] == 0)[0].tolist()
+    available_moves = np.where(board[0, :] == 0)[0]
     
-    for next_move_x in available_moves:
-        next_move_y = np.where(board[:, next_move_x] == 0)[0].max()
-        next_board = board.copy()
-        next_board[next_move_y, next_move_x] = STUDENT 
+    for next_move in available_moves:
+        next_board = _get_updated_board(board, next_move, STUDENT) 
         reward = max(reward, _min_for_opponent(next_board, depth-1, alpha, beta))
         if reward >= beta:
             return reward
@@ -139,12 +145,10 @@ def _min_for_opponent(board, depth, alpha, beta):
         return _utility_board(board)
     
     reward = beta
-    available_moves = np.where(board[0, :] == 0)[0].tolist()
+    available_moves = np.where(board[0, :] == 0)[0]
     
-    for next_move_x in available_moves:
-        next_move_y = np.where(board[:, next_move_x] == 0)[0].max()
-        next_board = board.copy()
-        next_board[next_move_y, next_move_x] = OPPONENT 
+    for next_move in available_moves:
+        next_board = _get_updated_board(board, next_move, OPPONENT)
         reward = min(reward, _max_for_student(next_board, depth-1, alpha, beta))
         if reward <= alpha:
             return reward
@@ -152,19 +156,16 @@ def _min_for_opponent(board, depth, alpha, beta):
         
     return reward
 
-def alpha_beta_decision(board, depth=5):
+def alpha_beta_decision(board, depth=3):
     available_moves = np.where(board[0, :] == 0)[0]
-    
-    best_move_x = -1
+    best_move = -1
     best_reward = -math.inf
     
-    for move_x in available_moves:
-        move_y = np.where(board[:, move_x] == 0)[0].max()
-        next_board = board.copy()
-        next_board[move_y, move_x] = STUDENT  
+    for next_move in available_moves:
+        next_board = _get_updated_board(board, next_move, STUDENT) 
         reward = _min_for_opponent(next_board, depth, alpha=-math.inf, beta=math.inf)
         if reward > best_reward:
             best_reward = reward
-            best_move_x = move_x
+            best_move = next_move
         
-    return best_move_x
+    return best_move

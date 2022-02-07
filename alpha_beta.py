@@ -38,8 +38,9 @@ def _utility_window(window):
         return -75
     elif (window[1:] == OPPONENT).all() and (window[0] == EMPTY).all():
         return -75
-    
-    return 0
+    # Any other case
+    else:
+        return 0
     
 def _utility_board(board):
     """

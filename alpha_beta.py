@@ -28,9 +28,8 @@ def _utility_window(window):
         return 10
     elif (window[2:] == STUDENT).all() and (window[:2] == EMPTY).all():
         return 10
-    
     # Allow opponent to connect three cells that can be used for a win
-    if (window[:2] == OPPONENT).all() and (window[2:] == EMPTY).all():
+    elif (window[:2] == OPPONENT).all() and (window[2:] == EMPTY).all():
         return -10
     elif (window[2:] == OPPONENT).all() and (window[:2] == EMPTY).all():
         return -10

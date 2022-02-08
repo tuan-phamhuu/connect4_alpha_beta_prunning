@@ -7,42 +7,43 @@ import math
 NUM_ROWS = 6
 NUM_COLS = 7
 
-OPPONENT = -1
+COURSE_BOT = -1
 STUDENT = 1
 EMPTY = 0
 
-def _utility_window(window):
+def _utility_window(window, player):
     """
-    Given a window of four cells, computes a utility score for the student
+    Given a window of four cells, computes a utility score for the player
     """  
+    opponent = player * -1
     # Acquire win
-    if (window == STUDENT).all():
-        return 100
+    if (window == player).all():
+        return 100 * player
     # Three connected cells
-    elif (window[:3] == STUDENT).all() and window[3] == EMPTY:
-        return 20
-    elif (window[1:] == STUDENT).all() and window[0] == EMPTY:
-        return 20
+    elif (window[:3] == player).all() and window[3] == EMPTY:
+        return 20 * player
+    elif (window[1:] == player).all() and window[0] == EMPTY:
+        return 20 * player
     # Two connected cells
-    elif (window[:2] == STUDENT).all() and (window[2:] == EMPTY).all():
-        return 10
-    elif (window[2:] == STUDENT).all() and (window[:2] == EMPTY).all():
-        return 10
+    elif (window[:2] == player).all() and (window[2:] == EMPTY).all():
+        return 10 * player
+    elif (window[2:] == player).all() and (window[:2] == EMPTY).all():
+        return 10 * player
     # Allow opponent to connect three cells that can be used for a win
-    elif (window[:2] == OPPONENT).all() and (window[2:] == EMPTY).all():
-        return -10
-    elif (window[2:] == OPPONENT).all() and (window[:2] == EMPTY).all():
-        return -10
+    elif (window[:2] == player).all() and (window[2:] == EMPTY).all():
+        return -10 * player
+    elif (window[2:] == opponent).all() and (window[:2] == EMPTY).all():
+        return -10 * player
     # Allow opponent to win
-    elif (window[:3] == OPPONENT).all() and (window[3] == EMPTY).all():
-        return -75
-    elif (window[1:] == OPPONENT).all() and (window[0] == EMPTY).all():
-        return -75
+    elif (window[:3] == opponent).all() and (window[3] == EMPTY).all():
+        return -75 * player
+    elif (window[1:] == opponent).all() and (window[0] == EMPTY).all():
+        return -75 * player
     # Any other case
     else:
         return 0
     
-def _utility_board(board):
+def _utility_board(board, player):
     """
     Given the current board, computes an utility score for the student by evaluating 
     all possible windows of four horizontally/vertically/diagonally connected cells
@@ -51,20 +52,20 @@ def _utility_board(board):
     
     # Incentivize placements in the center to block diagonal lines of opponents
     middle_column = board[:, NUM_COLS // 2]
-    middle_entries = (middle_column == STUDENT).sum()
-    score += middle_entries * 3
+    middle_entries = (middle_column == player).sum()
+    score += middle_entries * 3 * player
     
     # Horizontal lines
     for row in range(NUM_ROWS):
         for col in range(NUM_COLS - 3):
             window = board[row, col : col + 4]
-            score += _utility_window(window)
+            score += _utility_window(window, player)
             
     # Vertical lines
     for row in range(NUM_ROWS - 3):
         for col in range(NUM_COLS):
             window = board[row : row + 4, col]
-            score += _utility_window(window)
+            score += _utility_window(window, player)
      
     # Diagonal lines
     for start_row in range(NUM_ROWS - 3):
@@ -73,10 +74,10 @@ def _utility_board(board):
             end_col = start_col + 4
             # positively slopped
             window = board[range(start_row, end_row), range(start_col, end_col)]
-            score += _utility_window(window)
+            score += _utility_window(window, player)
             # negatively slopped
             window = board[range(end_row - 1, start_row - 1, -1), range(start_col, end_col)]
-            score += _utility_window(window)    
+            score += _utility_window(window, player)    
                 
     return score
 
@@ -84,7 +85,7 @@ def _is_terminal_node(board):
     """
     Returns if the board is in a terminal state, i.e. if the game has ended
     """
-    for player in [OPPONENT, STUDENT]:
+    for player in [COURSE_BOT, STUDENT]:
         # Check for horizontal wins
         for row in range(NUM_ROWS):
             for start_col in range(NUM_COLS - 3):
@@ -126,7 +127,7 @@ def _get_updated_board(board, move_x, player):
 
 def _max_for_student(board, depth, alpha, beta):
     if _is_terminal_node(board) or depth == 0:
-        return _utility_board(board)
+        return _utility_board(board, STUDENT)
     
     reward = alpha
     available_moves = np.where(board[0, :] == 0)[0]
@@ -142,13 +143,13 @@ def _max_for_student(board, depth, alpha, beta):
 
 def _min_for_opponent(board, depth, alpha, beta):
     if _is_terminal_node(board) or depth == 0:
-        return _utility_board(board)
+        return _utility_board(board, COURSE_BOT)
     
     reward = beta
     available_moves = np.where(board[0, :] == 0)[0]
     
     for next_move in available_moves:
-        next_board = _get_updated_board(board, next_move, OPPONENT)
+        next_board = _get_updated_board(board, next_move, COURSE_BOT)
         reward = min(reward, _max_for_student(next_board, depth-1, alpha, beta))
         if reward <= alpha:
             return reward
